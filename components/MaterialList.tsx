@@ -1,11 +1,13 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
+import { AreaSegment } from '../types';
 
 interface Props {
-  areaLength: string;
-  areaWidth: string;
+  areaSegments: AreaSegment[];
   perimeterSegments: string[];
   parapetHeight: string;
+  doubleIso: boolean;
+  isoThickness: string;
 }
 
 interface ListItem {
@@ -17,10 +19,11 @@ interface ListItem {
 }
 
 export const MaterialList: React.FC<Props> = ({ 
-  areaLength, 
-  areaWidth, 
+  areaSegments, 
   perimeterSegments, 
-  parapetHeight 
+  parapetHeight,
+  doubleIso,
+  isoThickness
 }) => {
   const [email, setEmail] = useState<string>(() => localStorage.getItem('roof_pro_saved_email') || '');
   const [customMaterials, setCustomMaterials] = useState<ListItem[]>(() => {
@@ -45,10 +48,16 @@ export const MaterialList: React.FC<Props> = ({
 
   const materials = useMemo(() => {
     // Area calcs
-    const al = parseFloat(areaLength) || 0;
-    const aw = parseFloat(areaWidth) || 0;
-    const baseSqft = al * aw;
+    let baseSqft = 0;
+    areaSegments.forEach(seg => {
+      const l = parseFloat(seg.length) || 0;
+      const w = parseFloat(seg.width) || 0;
+      baseSqft += l * w;
+    });
+    
     const areaTotalWithWaste = Math.ceil(baseSqft * 1.1);
+    const isoMultiplier = doubleIso ? 2 : 1;
+    const isoLabel = isoThickness ? `${isoThickness}" ISO Board` : 'ISO Board';
 
     // Perimeter calcs
     const totalPerimeter = perimeterSegments.reduce((acc, curr) => acc + (parseFloat(curr) || 0), 0);
@@ -58,8 +67,8 @@ export const MaterialList: React.FC<Props> = ({
 
     // Base calculated items
     const baseList: ListItem[] = [
-      { id: 'iso44', name: "4' x 4' ISO Board", count: Math.ceil(areaTotalWithWaste / 16), selected: !unselectedIds.has('iso44') },
-      { id: 'iso48', name: "4' x 8' ISO Board", count: Math.ceil(areaTotalWithWaste / 32), selected: !unselectedIds.has('iso48') },
+      { id: 'iso44', name: `4' x 4' ${isoLabel}`, count: Math.ceil(areaTotalWithWaste / 16) * isoMultiplier, selected: !unselectedIds.has('iso44') },
+      { id: 'iso48', name: `4' x 8' ${isoLabel}`, count: Math.ceil(areaTotalWithWaste / 32) * isoMultiplier, selected: !unselectedIds.has('iso48') },
       { id: 'board38', name: "3' x 8' Board", count: Math.ceil(areaTotalWithWaste / 24), selected: !unselectedIds.has('board38') },
       { id: 'caparea', name: "Cap Rolls (Main Area)", count: Math.ceil(areaTotalWithWaste / 75), selected: !unselectedIds.has('caparea') },
       { id: 'basearea', name: "Base Rolls (Main Area)", count: Math.ceil(areaTotalWithWaste / 96), selected: !unselectedIds.has('basearea') },
@@ -77,7 +86,7 @@ export const MaterialList: React.FC<Props> = ({
       calculatedItems: baseList,
       allDisplayItems: [...baseList, ...customMaterials]
     };
-  }, [areaLength, areaWidth, perimeterSegments, parapetHeight, unselectedIds, customMaterials]);
+  }, [areaSegments, perimeterSegments, parapetHeight, unselectedIds, customMaterials, doubleIso, isoThickness]);
 
   const toggleSelection = (id: string, isCustom?: boolean) => {
     if (isCustom) {

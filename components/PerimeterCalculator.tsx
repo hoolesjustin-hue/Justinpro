@@ -35,8 +35,12 @@ export const PerimeterCalculator: React.FC<Props> = ({ segments, setSegments, pa
     setSegments(newSegments);
   };
 
+  const addSegment = () => {
+    setSegments([...segments, '']);
+  };
+
   const handleReset = () => {
-    setSegments(Array(10).fill(''));
+    setSegments(Array(4).fill(''));
     setParapetHeight('');
   };
 
@@ -50,7 +54,7 @@ export const PerimeterCalculator: React.FC<Props> = ({ segments, setSegments, pa
         <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest px-1 border-b border-slate-800 pb-2 italic">
           Perimeter Segments (Linear FT)
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {segments.map((val, idx) => (
             <input
               key={idx}
@@ -62,6 +66,15 @@ export const PerimeterCalculator: React.FC<Props> = ({ segments, setSegments, pa
               className="bg-slate-800 border border-slate-700 text-white text-lg font-bold p-3 rounded-lg focus:border-yellow-500 focus:outline-none text-center"
             />
           ))}
+          <button
+            onClick={addSegment}
+            className="bg-slate-800/50 border-2 border-dashed border-slate-700 text-slate-500 hover:text-yellow-500 hover:border-yellow-500 rounded-lg flex items-center justify-center transition-all active:scale-95"
+            title="Add Segment"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
         </div>
       </div>
 

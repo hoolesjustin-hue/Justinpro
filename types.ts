@@ -5,6 +5,11 @@ export enum CalculatorTab {
   MATERIAL_LIST = 'MATERIAL_LIST'
 }
 
+export interface AreaSegment {
+  length: string;
+  width: string;
+}
+
 export interface MaterialResult {
   label: string;
   value: number;

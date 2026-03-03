@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CalculatorTab } from './types';
+import { CalculatorTab, AreaSegment } from './types';
 import { MainAreaCalculator } from './components/MainAreaCalculator';
 import { PerimeterCalculator } from './components/PerimeterCalculator';
 import { MaterialList } from './components/MaterialList';
@@ -14,10 +14,11 @@ const App: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   // Lifted state for calculators
-  const [areaLength, setAreaLength] = useState<string>('');
-  const [areaWidth, setAreaWidth] = useState<string>('');
-  const [perimeterSegments, setPerimeterSegments] = useState<string[]>(Array(10).fill(''));
+  const [areaSegments, setAreaSegments] = useState<AreaSegment[]>([{ length: '', width: '' }]);
+  const [perimeterSegments, setPerimeterSegments] = useState<string[]>(Array(4).fill(''));
   const [parapetHeight, setParapetHeight] = useState<string>('');
+  const [doubleIso, setDoubleIso] = useState<boolean>(false);
+  const [isoThickness, setIsoThickness] = useState<string>('');
 
   useEffect(() => {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -29,7 +30,7 @@ const App: React.FC = () => {
 
     window.addEventListener('appinstalled', () => {
       setDeferredPrompt(null);
-      triggerToast('RoofPRO Installed Successfully!');
+      triggerToast('App Installed Successfully!');
     });
   }, []);
 
@@ -56,7 +57,7 @@ const App: React.FC = () => {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: 'JustinRoofPRO',
+          title: "Justin's Professional Roofing",
           text: 'Field material calculator for roofing professionals.',
           url: window.location.href,
         });
@@ -86,7 +87,7 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/98 backdrop-blur-xl animate-in fade-in duration-300">
           <div className="bg-slate-900 border-2 border-slate-700 w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl space-y-6 overflow-y-auto max-h-[90vh]">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-2xl font-black uppercase italic tracking-tighter">Install <span className="text-yellow-500">RoofPRO</span></h2>
+              <h2 className="text-xl font-black uppercase italic tracking-tighter">Install <span className="text-yellow-500">App</span></h2>
               <button onClick={() => setShowGuide(false)} className="text-slate-500 hover:text-white p-2">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
@@ -139,14 +140,15 @@ const App: React.FC = () => {
         <div className="max-w-xl mx-auto flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-yellow-500 rounded-2xl flex items-center justify-center shadow-xl shadow-yellow-500/20">
+              <div className="w-12 h-12 bg-yellow-500 rounded-2xl flex items-center justify-center shadow-xl shadow-yellow-500/20 shrink-0">
                 <span className="text-slate-950 font-black text-3xl leading-none italic">J</span>
               </div>
               <div className="flex flex-col">
-                <h1 className="text-2xl font-black tracking-tighter uppercase italic leading-none flex items-center gap-1">
-                  Justin<span className="text-yellow-500">RoofPRO</span>
+                <h1 className="text-[1.1rem] font-black tracking-tighter uppercase italic leading-none flex flex-col sm:flex-row sm:gap-1.5 sm:items-center text-slate-100">
+                  <span>Justin's</span>
+                  <span className="text-yellow-500">SBS Roofing Calculator</span>
                 </h1>
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1 ml-0.5 italic">Field Tool v5.4</span>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1 ml-0.5 italic">Field Tool v5.4 By Justin Hooles</span>
               </div>
             </div>
             
@@ -226,10 +228,12 @@ const App: React.FC = () => {
           <div className="bg-slate-950/60 p-6 rounded-[2.8rem] border border-slate-800 min-h-[500px]">
             {activeTab === CalculatorTab.MAIN_AREA && (
               <MainAreaCalculator 
-                length={areaLength} 
-                setLength={setAreaLength} 
-                width={areaWidth} 
-                setWidth={setAreaWidth} 
+                segments={areaSegments} 
+                setSegments={setAreaSegments}
+                doubleIso={doubleIso}
+                setDoubleIso={setDoubleIso}
+                isoThickness={isoThickness}
+                setIsoThickness={setIsoThickness}
               />
             )}
             {activeTab === CalculatorTab.PERIMETER && (
@@ -242,10 +246,11 @@ const App: React.FC = () => {
             )}
             {activeTab === CalculatorTab.MATERIAL_LIST && (
               <MaterialList 
-                areaLength={areaLength}
-                areaWidth={areaWidth}
+                areaSegments={areaSegments}
                 perimeterSegments={perimeterSegments}
                 parapetHeight={parapetHeight}
+                doubleIso={doubleIso}
+                isoThickness={isoThickness}
               />
             )}
           </div>
@@ -268,7 +273,7 @@ const App: React.FC = () => {
           </button>
         </div>
         <p className="mt-6 text-[9px] text-slate-700 font-black uppercase tracking-[0.4em]">
-          JustinRoofPRO Premium Field Tool
+          Justin's Professional Roofing Field Tool
         </p>
       </footer>
     </div>

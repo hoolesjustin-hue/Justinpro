@@ -1,7 +1,6 @@
-
 {
-  "name": "JustinRoofPRO",
-  "short_name": "RoofPRO",
+  "name": "Justin's SBS Roofing Calculator",
+  "short_name": "JustinSBSCalc",
   "description": "Roofing SQFT & Material Calculator",
   "start_url": "/",
   "display": "standalone",
