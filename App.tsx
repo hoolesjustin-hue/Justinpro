@@ -19,6 +19,10 @@ const App: React.FC = () => {
   const [parapetHeight, setParapetHeight] = useState<string>('');
   const [doubleIso, setDoubleIso] = useState<boolean>(false);
   const [isoThickness, setIsoThickness] = useState<string>('');
+  const [duotackLayers, setDuotackLayers] = useState<string>('2');
+  const [customProductName, setCustomProductName] = useState<string>('');
+  const [customProductWidth, setCustomProductWidth] = useState<string>('');
+  const [customProductLength, setCustomProductLength] = useState<string>('');
 
   useEffect(() => {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -234,6 +238,14 @@ const App: React.FC = () => {
                 setDoubleIso={setDoubleIso}
                 isoThickness={isoThickness}
                 setIsoThickness={setIsoThickness}
+                duotackLayers={duotackLayers}
+                setDuotackLayers={setDuotackLayers}
+                customProductName={customProductName}
+                setCustomProductName={setCustomProductName}
+                customProductWidth={customProductWidth}
+                setCustomProductWidth={setCustomProductWidth}
+                customProductLength={customProductLength}
+                setCustomProductLength={setCustomProductLength}
               />
             )}
             {activeTab === CalculatorTab.PERIMETER && (
@@ -251,6 +263,10 @@ const App: React.FC = () => {
                 parapetHeight={parapetHeight}
                 doubleIso={doubleIso}
                 isoThickness={isoThickness}
+                duotackLayers={duotackLayers}
+                customProductName={customProductName}
+                customProductWidth={customProductWidth}
+                customProductLength={customProductLength}
               />
             )}
           </div>

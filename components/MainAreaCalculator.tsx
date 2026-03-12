@@ -10,6 +10,14 @@ interface Props {
   setDoubleIso: (val: boolean) => void;
   isoThickness: string;
   setIsoThickness: (val: string) => void;
+  duotackLayers: string;
+  setDuotackLayers: (val: string) => void;
+  customProductName: string;
+  setCustomProductName: (val: string) => void;
+  customProductWidth: string;
+  setCustomProductWidth: (val: string) => void;
+  customProductLength: string;
+  setCustomProductLength: (val: string) => void;
 }
 
 export const MainAreaCalculator: React.FC<Props> = ({ 
@@ -18,21 +26,43 @@ export const MainAreaCalculator: React.FC<Props> = ({
   doubleIso, 
   setDoubleIso,
   isoThickness,
-  setIsoThickness
+  setIsoThickness,
+  duotackLayers,
+  setDuotackLayers,
+  customProductName,
+  setCustomProductName,
+  customProductWidth,
+  setCustomProductWidth,
+  customProductLength,
+  setCustomProductLength
 }) => {
   const results = useMemo(() => {
     let baseSqft = 0;
+    let sopralapFeet = 0;
     
     segments.forEach(seg => {
       const l = parseFloat(seg.length) || 0;
       const w = parseFloat(seg.width) || 0;
       baseSqft += l * w;
+
+      if (l > 0 && w > 0) {
+        const runs = Math.max(0, Math.floor((l - 0.001) / 8));
+        sopralapFeet += runs * w;
+      }
     });
 
     const totalWithWaste = baseSqft * 1.1;
     const isoMultiplier = doubleIso ? 2 : 1;
     
     const isoLabel = isoThickness ? `${isoThickness}" ISO Board` : 'ISO Board';
+    
+    const layers = parseFloat(duotackLayers) || 0;
+    const duotackBoxes = Math.ceil((totalWithWaste * layers) / 480);
+
+    const customW = parseFloat(customProductWidth) || 0;
+    const customL = parseFloat(customProductLength) || 0;
+    const customCoverage = customW * customL;
+    const customUnits = customCoverage > 0 ? Math.ceil(totalWithWaste / customCoverage) : 0;
 
     return {
       baseSqft: Math.round(baseSqft),
@@ -44,14 +74,22 @@ export const MainAreaCalculator: React.FC<Props> = ({
       board3x8: Math.ceil(totalWithWaste / 24),
       capRolls: Math.ceil(totalWithWaste / 75),
       baseRolls: Math.ceil(totalWithWaste / 96),
+      sopraVaporRolls: Math.ceil(totalWithWaste / 469),
+      sopralapRolls: Math.ceil(sopralapFeet / 33),
+      duotackBoxes,
+      customUnits,
       isoLabel
     };
-  }, [segments, doubleIso, isoThickness]);
+  }, [segments, doubleIso, isoThickness, duotackLayers, customProductWidth, customProductLength]);
 
   const handleReset = () => {
     setSegments([{ length: '', width: '' }]);
     setDoubleIso(false);
     setIsoThickness('');
+    setDuotackLayers('2');
+    setCustomProductName('');
+    setCustomProductWidth('');
+    setCustomProductLength('');
   };
 
   const updateSegment = (index: number, field: keyof AreaSegment, value: string) => {
@@ -124,7 +162,11 @@ export const MainAreaCalculator: React.FC<Props> = ({
               <input 
                 type="checkbox" 
                 checked={doubleIso} 
-                onChange={(e) => setDoubleIso(e.target.checked)} 
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setDoubleIso(checked);
+                  setDuotackLayers(checked ? '3' : '2');
+                }} 
                 className="hidden"
               />
               <span className={`text-[9px] font-black uppercase tracking-wider transition-colors ${doubleIso ? 'text-yellow-500' : 'text-slate-500 group-hover:text-slate-400'}`}>
@@ -145,20 +187,82 @@ export const MainAreaCalculator: React.FC<Props> = ({
             />
             <span className="text-[10px] text-slate-600 font-bold uppercase tracking-wider pr-1">IN</span>
           </div>
+
+          {/* Custom Material Input */}
+          <div className="bg-slate-900/50 p-3 rounded-2xl border border-slate-800/50 flex flex-col gap-3">
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider pl-1">Custom Material (Area)</span>
+            <input 
+              type="text" 
+              value={customProductName}
+              onChange={(e) => setCustomProductName(e.target.value)}
+              placeholder="Product Name (e.g. DensDeck)"
+              className="bg-slate-950 border border-slate-800 text-white px-3 py-2 rounded-xl text-sm w-full focus:outline-none focus:border-yellow-500"
+            />
+            <div className="flex gap-2">
+              <div className="flex-1 flex items-center bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 focus-within:border-yellow-500">
+                <input 
+                  type="text" 
+                  inputMode="decimal"
+                  value={customProductWidth}
+                  onChange={(e) => setCustomProductWidth(e.target.value)}
+                  placeholder="Width"
+                  className="bg-transparent text-white w-full focus:outline-none text-sm"
+                />
+                <span className="text-[10px] text-slate-600 font-bold">FT</span>
+              </div>
+              <div className="flex-1 flex items-center bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 focus-within:border-yellow-500">
+                <input 
+                  type="text" 
+                  inputMode="decimal"
+                  value={customProductLength}
+                  onChange={(e) => setCustomProductLength(e.target.value)}
+                  placeholder="Length"
+                  className="bg-transparent text-white w-full focus:outline-none text-sm"
+                />
+                <span className="text-[10px] text-slate-600 font-bold">FT</span>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-2.5">
           {[
             { label: `4' x 4' ${results.isoLabel}`, val: results.iso4x4 },
             { label: `4' x 8' ${results.isoLabel}`, val: results.iso4x8 },
             { label: "3' x 8' Board", val: results.board3x8 },
+            { label: "Sopra Vapor Rolls (3.5'x134')", val: results.sopraVaporRolls },
             { label: "Cap Rolls (3'x25')", val: results.capRolls },
-            { label: "Base Rolls (3'x32')", val: results.baseRolls }
+            { label: "Base Rolls (3'x32')", val: results.baseRolls },
+            { label: "Sopralap Rolls (33')", val: results.sopralapRolls }
           ].map((item, i) => (
             <div key={i} className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
               <span className="text-slate-400 font-black text-[11px] uppercase tracking-wide">{item.label}</span>
               <span className="text-2xl font-black text-yellow-500 mono">{item.val}</span>
             </div>
           ))}
+          <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-slate-400 font-black text-[11px] uppercase tracking-wide">Duotack 365 (Boxes)</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Layers:</span>
+                <input 
+                  type="number" 
+                  inputMode="numeric"
+                  value={duotackLayers}
+                  onChange={(e) => setDuotackLayers(e.target.value)}
+                  className="bg-slate-950 border border-slate-700 text-white px-2 py-0.5 rounded-md text-xs w-16 focus:outline-none focus:border-yellow-500 font-mono"
+                />
+              </div>
+            </div>
+            <span className="text-2xl font-black text-yellow-500 mono">{results.duotackBoxes}</span>
+          </div>
+          {results.customUnits > 0 && (
+            <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
+              <span className="text-slate-400 font-black text-[11px] uppercase tracking-wide">
+                {customProductName || 'Custom Material'} ({customProductWidth}'x{customProductLength}')
+              </span>
+              <span className="text-2xl font-black text-yellow-500 mono">{results.customUnits}</span>
+            </div>
+          )}
         </div>
       </div>
 

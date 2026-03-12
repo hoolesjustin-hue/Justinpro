@@ -8,6 +8,10 @@ interface Props {
   parapetHeight: string;
   doubleIso: boolean;
   isoThickness: string;
+  duotackLayers: string;
+  customProductName: string;
+  customProductWidth: string;
+  customProductLength: string;
 }
 
 interface ListItem {
@@ -23,7 +27,11 @@ export const MaterialList: React.FC<Props> = ({
   perimeterSegments, 
   parapetHeight,
   doubleIso,
-  isoThickness
+  isoThickness,
+  duotackLayers,
+  customProductName,
+  customProductWidth,
+  customProductLength
 }) => {
   const [email, setEmail] = useState<string>(() => localStorage.getItem('roof_pro_saved_email') || '');
   const [customMaterials, setCustomMaterials] = useState<ListItem[]>(() => {
@@ -49,15 +57,25 @@ export const MaterialList: React.FC<Props> = ({
   const materials = useMemo(() => {
     // Area calcs
     let baseSqft = 0;
+    let sopralapFeet = 0;
+    
     areaSegments.forEach(seg => {
       const l = parseFloat(seg.length) || 0;
       const w = parseFloat(seg.width) || 0;
       baseSqft += l * w;
+
+      if (l > 0 && w > 0) {
+        const runs = Math.max(0, Math.floor((l - 0.001) / 8));
+        sopralapFeet += runs * w;
+      }
     });
     
     const areaTotalWithWaste = Math.ceil(baseSqft * 1.1);
     const isoMultiplier = doubleIso ? 2 : 1;
     const isoLabel = isoThickness ? `${isoThickness}" ISO Board` : 'ISO Board';
+    
+    const layers = parseFloat(duotackLayers) || 0;
+    const duotackBoxes = Math.ceil((areaTotalWithWaste * layers) / 480);
 
     // Perimeter calcs
     const totalPerimeter = perimeterSegments.reduce((acc, curr) => acc + (parseFloat(curr) || 0), 0);
@@ -65,17 +83,35 @@ export const MaterialList: React.FC<Props> = ({
     const wallFactor = (height + 16) / 12;
     const wallSqft = Math.ceil(totalPerimeter * wallFactor);
 
+    const customW = parseFloat(customProductWidth) || 0;
+    const customL = parseFloat(customProductLength) || 0;
+    const customCoverage = customW * customL;
+    const customUnits = customCoverage > 0 ? Math.ceil(areaTotalWithWaste / customCoverage) : 0;
+
     // Base calculated items
     const baseList: ListItem[] = [
       { id: 'iso44', name: `4' x 4' ${isoLabel}`, count: Math.ceil(areaTotalWithWaste / 16) * isoMultiplier, selected: !unselectedIds.has('iso44') },
       { id: 'iso48', name: `4' x 8' ${isoLabel}`, count: Math.ceil(areaTotalWithWaste / 32) * isoMultiplier, selected: !unselectedIds.has('iso48') },
       { id: 'board38', name: "3' x 8' Board", count: Math.ceil(areaTotalWithWaste / 24), selected: !unselectedIds.has('board38') },
+      { id: 'sopravapor', name: "Sopra Vapor Rolls (3.5'x134')", count: Math.ceil(areaTotalWithWaste / 469), selected: !unselectedIds.has('sopravapor') },
       { id: 'caparea', name: "Cap Rolls (Main Area)", count: Math.ceil(areaTotalWithWaste / 75), selected: !unselectedIds.has('caparea') },
       { id: 'basearea', name: "Base Rolls (Main Area)", count: Math.ceil(areaTotalWithWaste / 96), selected: !unselectedIds.has('basearea') },
+      { id: 'sopralap', name: "Sopralap Rolls (33')", count: Math.ceil(sopralapFeet / 33), selected: !unselectedIds.has('sopralap') },
+      { id: 'duotack', name: `Duotack 365 (${layers} Layers)`, count: duotackBoxes, selected: !unselectedIds.has('duotack') },
       { id: 'pswall', name: "Peel & Stick Rolls (Wall)", count: Math.ceil(wallSqft / 100), selected: !unselectedIds.has('pswall') },
       { id: 'capwall', name: "Cap Rolls (Wall)", count: Math.ceil(wallSqft / 75), selected: !unselectedIds.has('capwall') },
       { id: 'ffwall', name: "FF Rolls (Wall)", count: Math.ceil(wallSqft / 85), selected: !unselectedIds.has('ffwall') }
     ].filter(item => item.count > 0);
+
+    if (customUnits > 0) {
+      const name = customProductName || 'Custom Material';
+      baseList.push({
+        id: 'custom_calc',
+        name: `${name} (${customProductWidth}'x${customProductLength}')`,
+        count: customUnits,
+        selected: !unselectedIds.has('custom_calc')
+      });
+    }
 
     return {
       summary: {
@@ -86,7 +122,7 @@ export const MaterialList: React.FC<Props> = ({
       calculatedItems: baseList,
       allDisplayItems: [...baseList, ...customMaterials]
     };
-  }, [areaSegments, perimeterSegments, parapetHeight, unselectedIds, customMaterials, doubleIso, isoThickness]);
+  }, [areaSegments, perimeterSegments, parapetHeight, unselectedIds, customMaterials, doubleIso, isoThickness, duotackLayers]);
 
   const toggleSelection = (id: string, isCustom?: boolean) => {
     if (isCustom) {
